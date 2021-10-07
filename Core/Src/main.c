@@ -74,9 +74,11 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void ToggleLight(void *argument);
-void ToggleLightTimer(void *argument);
+void LightTimerCallback(void *argument);
 
 /* USER CODE BEGIN PFP */
+
+void InitSystem(void);
 
 /* USER CODE END PFP */
 
@@ -92,7 +94,10 @@ void ToggleLightTimer(void *argument);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	uint32_t timerDelay;
+	osStatus_t status;
 
+  	timerDelay = 2000 * osKernelGetTickFreq() / 1000; //5s
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -101,6 +106,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
   /* USER CODE END Init */
 
@@ -108,7 +114,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  //InitSystem();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -135,7 +141,7 @@ int main(void)
 
   /* Create the timer(s) */
   /* creation of togglelighttimer */
-  togglelighttimerHandle = osTimerNew(ToggleLightTimer, osTimerPeriodic, NULL, &togglelighttimer_attributes);
+  togglelighttimerHandle = osTimerNew(LightTimerCallback, osTimerPeriodic, NULL, &togglelighttimer_attributes);
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
@@ -158,6 +164,7 @@ int main(void)
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
+  status = osTimerStart(togglelighttimerHandle, timerDelay);
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
 
@@ -295,6 +302,16 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void InitSystem(void)
+{
+  uint32_t timerDelay;
+  osStatus_t status;
+
+  timerDelay = 2000 * osKernelGetTickFreq() / 1000; //5s
+
+  status = osTimerStart(togglelighttimerHandle, timerDelay);
+  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_ToggleLight */
@@ -315,12 +332,20 @@ void ToggleLight(void *argument)
   /* USER CODE END 5 */
 }
 
-/* ToggleLightTimer function */
-void ToggleLightTimer(void *argument)
+/* LightTimerCallback function */
+void LightTimerCallback(void *argument)
 {
-  /* USER CODE BEGIN ToggleLightTimer */
+  /* USER CODE BEGIN LightTimerCallback */
+  uint32_t timerDelay;
+  osStatus_t status;
 
-  /* USER CODE END ToggleLightTimer */
+  timerDelay = 2000 * osKernelGetTickFreq() / 1000; //5s
+
+
+  status = osTimerStart(togglelighttimerHandle, timerDelay);
+
+  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+  /* USER CODE END LightTimerCallback */
 }
 
 /**
