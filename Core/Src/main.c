@@ -78,7 +78,7 @@ void LightTimerCallback(void *argument);
 
 /* USER CODE BEGIN PFP */
 
-void InitSystem(void);
+void InitTimer(uint8_t);
 
 /* USER CODE END PFP */
 
@@ -94,10 +94,10 @@ void InitSystem(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint32_t timerDelay;
-	osStatus_t status;
+	//uint32_t timerDelay;
+	//osStatus_t status;
 
-  	timerDelay = 2000 * osKernelGetTickFreq() / 1000; //5s
+  	//timerDelay = 2000 * osKernelGetTickFreq() / 1000; //5s
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -144,6 +144,7 @@ int main(void)
   togglelighttimerHandle = osTimerNew(LightTimerCallback, osTimerPeriodic, NULL, &togglelighttimer_attributes);
 
   /* USER CODE BEGIN RTOS_TIMERS */
+  InitTimer(5);
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
@@ -164,7 +165,7 @@ int main(void)
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  status = osTimerStart(togglelighttimerHandle, timerDelay);
+  //status = osTimerStart(togglelighttimerHandle, timerDelay);
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
 
@@ -302,12 +303,12 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void InitSystem(void)
+void InitTimer(uint8_t time)
 {
   uint32_t timerDelay;
   osStatus_t status;
 
-  timerDelay = 2000 * osKernelGetTickFreq() / 1000; //5s
+  timerDelay = time * osKernelGetTickFreq();
 
   status = osTimerStart(togglelighttimerHandle, timerDelay);
   //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
@@ -336,13 +337,6 @@ void ToggleLight(void *argument)
 void LightTimerCallback(void *argument)
 {
   /* USER CODE BEGIN LightTimerCallback */
-  uint32_t timerDelay;
-  osStatus_t status;
-
-  timerDelay = 2000 * osKernelGetTickFreq() / 1000; //5s
-
-
-  status = osTimerStart(togglelighttimerHandle, timerDelay);
 
   HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
   /* USER CODE END LightTimerCallback */
