@@ -311,8 +311,16 @@ void InitTimer(uint8_t time)
   timerDelay = time * osKernelGetTickFreq();
 
   status = osTimerStart(togglelighttimerHandle, timerDelay);
-  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if(GPIO_Pin == GPIO_PIN_13) // If The INT Source Is EXTI Line9 (A9 Pin)
+    {
+      HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+    }
+}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_ToggleLight */
@@ -338,7 +346,8 @@ void LightTimerCallback(void *argument)
 {
   /* USER CODE BEGIN LightTimerCallback */
 
-  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+
   /* USER CODE END LightTimerCallback */
 }
 
