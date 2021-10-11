@@ -107,6 +107,7 @@ void InitTimer(uint8_t);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	count = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -320,14 +321,10 @@ static void MX_GPIO_Init(void)
 void InitTimer(uint8_t time)
 {
   uint32_t timerDelay;
-  osStatus_t status;
 
   timerDelay = time * osKernelGetTickFreq();
 
-  status = osTimerStart(togglelighttimerHandle, timerDelay);
-  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
-  count = 0;
+  osTimerStart(togglelighttimerHandle, timerDelay);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
@@ -351,13 +348,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void ToggleLight(void *argument)
 {
   /* USER CODE BEGIN 5 */
+	uint32_t delay = 1;
   /* Infinite loop */
   for(;;)
   {
 	osSemaphoreAcquire(ToggleLightSemaphoreHandle, osWaitForever);
 
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
+	for (; count > 0; count--)
+	{
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	  osDelay(delay * osKernelGetTickFreq()/ 2 );
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	  osDelay(delay * osKernelGetTickFreq() / 2);
+	}
   }
   /* USER CODE END 5 */
 }
@@ -379,7 +382,7 @@ void HandleTimer(void *argument)
 
 	if (!osTimerIsRunning(togglelighttimerHandle))
 	{
-	  InitTimer(1);
+	  InitTimer(2);
 	}
   }
   /* USER CODE END HandleTimer */
