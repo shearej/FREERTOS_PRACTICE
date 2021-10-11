@@ -50,10 +50,10 @@ const osThreadAttr_t togglelight_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for starttimer */
-osThreadId_t starttimerHandle;
-const osThreadAttr_t starttimer_attributes = {
-  .name = "starttimer",
+/* Definitions for handletimer */
+osThreadId_t handletimerHandle;
+const osThreadAttr_t handletimer_attributes = {
+  .name = "handletimer",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
@@ -72,10 +72,10 @@ osSemaphoreId_t ToggleLightSemaphoreHandle;
 const osSemaphoreAttr_t ToggleLightSemaphore_attributes = {
   .name = "ToggleLightSemaphore"
 };
-/* Definitions for StartTimerSemaphore */
-osSemaphoreId_t StartTimerSemaphoreHandle;
-const osSemaphoreAttr_t StartTimerSemaphore_attributes = {
-  .name = "StartTimerSemaphore"
+/* Definitions for HandleTimerSemaphore */
+osSemaphoreId_t HandleTimerSemaphoreHandle;
+const osSemaphoreAttr_t HandleTimerSemaphore_attributes = {
+  .name = "HandleTimerSemaphore"
 };
 /* USER CODE BEGIN PV */
 static uint8_t count;
@@ -86,7 +86,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void ToggleLight(void *argument);
-void StartTimer(void *argument);
+void HandleTimer(void *argument);
 void LightTimerCallback(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -143,11 +143,12 @@ int main(void)
   /* creation of ToggleLightSemaphore */
   ToggleLightSemaphoreHandle = osSemaphoreNew(1, 1, &ToggleLightSemaphore_attributes);
 
-  /* creation of StartTimerSemaphore */
-  StartTimerSemaphoreHandle = osSemaphoreNew(1, 1, &StartTimerSemaphore_attributes);
+  /* creation of HandleTimerSemaphore */
+  HandleTimerSemaphoreHandle = osSemaphoreNew(1, 1, &HandleTimerSemaphore_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
-  osSemaphoreAcquire(StartTimerSemaphoreHandle, osWaitForever);
+  osSemaphoreAcquire(HandleTimerSemaphoreHandle, osWaitForever);
+  osSemaphoreAcquire(ToggleLightSemaphoreHandle, osWaitForever);
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
 
@@ -171,8 +172,8 @@ int main(void)
   /* creation of togglelight */
   togglelightHandle = osThreadNew(ToggleLight, NULL, &togglelight_attributes);
 
-  /* creation of starttimer */
-  starttimerHandle = osThreadNew(StartTimer, NULL, &starttimer_attributes);
+  /* creation of handletimer */
+  handletimerHandle = osThreadNew(HandleTimer, NULL, &handletimer_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -333,8 +334,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == GPIO_PIN_13) // If The INT Source Is EXTI Line13 (A13 Pin)
     {
-      //count += 1;
-      osSemaphoreRelease(StartTimerSemaphoreHandle);
+      count += 1;
+      osSemaphoreRelease(HandleTimerSemaphoreHandle);
     }
 }
 
@@ -353,29 +354,35 @@ void ToggleLight(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(200);
+	osSemaphoreAcquire(ToggleLightSemaphoreHandle, osWaitForever);
+
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+
   }
   /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_StartTimer */
+/* USER CODE BEGIN Header_HandleTimer */
 /**
-* @brief Function implementing the starttimer thread.
+* @brief Function implementing the handletimer thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTimer */
-void StartTimer(void *argument)
+/* USER CODE END Header_HandleTimer */
+void HandleTimer(void *argument)
 {
-  /* USER CODE BEGIN StartTimer */
+  /* USER CODE BEGIN HandleTimer */
   /* Infinite loop */
   for(;;)
   {
-	osSemaphoreAcquire(StartTimerSemaphoreHandle, osWaitForever);
+	osSemaphoreAcquire(HandleTimerSemaphoreHandle, osWaitForever);
 
-	InitTimer(1);
+	if (!osTimerIsRunning(togglelighttimerHandle))
+	{
+	  InitTimer(1);
+	}
   }
-  /* USER CODE END StartTimer */
+  /* USER CODE END HandleTimer */
 }
 
 /* LightTimerCallback function */
@@ -383,7 +390,7 @@ void LightTimerCallback(void *argument)
 {
   /* USER CODE BEGIN LightTimerCallback */
 
-  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	osSemaphoreRelease(ToggleLightSemaphoreHandle);
 
   /* USER CODE END LightTimerCallback */
 }
