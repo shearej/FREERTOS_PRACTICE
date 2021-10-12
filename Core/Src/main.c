@@ -348,7 +348,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void ToggleLight(void *argument)
 {
   /* USER CODE BEGIN 5 */
-	uint32_t delay = 1;
+	uint32_t delay = osKernelGetTickFreq()/ 3;
   /* Infinite loop */
   for(;;)
   {
@@ -357,9 +357,9 @@ void ToggleLight(void *argument)
 	for (; count > 0; count--)
 	{
 	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	  osDelay(delay * osKernelGetTickFreq()/ 2 );
+	  osDelay(delay);
 	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	  osDelay(delay * osKernelGetTickFreq() / 2);
+	  osDelay(delay);
 	}
   }
   /* USER CODE END 5 */
